@@ -1,0 +1,25 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['container', 'clusters', 'get-credentials', '${_CLUSTER_NAME_}', '--project=${_PROJECT_ID_}', '--region=${_REGION_}']
+- name: 'gcr.io/${_PROJECT_ID_}/helm:3.12.0'
+  entrypoint: 'helm'
+  args: ['uninstall', '${_HELM_CHART_NAME_}', '-n',  '${_K8S_NAMESPACE_}']
+  allowFailure: true
+- name: 'gcr.io/cloud-builders/kubectl'
+  entrypoint: 'kubectl'
+  args: ['delete', '-f', '${_GATEWAY_PATH_}/${_K8S_NAMESPACE_}/${_GATEWAY_MANIFEST_}', '-n', '${_K8S_NAMESPACE_}']
+  allowFailure: true
+tags: ['cloud-builders-community']
+serviceAccount: "projects/${_PROJECT_ID_}/serviceAccounts/${_PROJECT_ID_}-sa@${_PROJECT_ID_}.iam.gserviceaccount.com"
+logsBucket: "gs://${_LOG_BUCKET_}"
+substitutions:
+  _PROJECT_ID_: ''
+  _REGION_: ''
+  _CLUSTER_NAME_: ''
+  _HELM_CHART_NAME_: ''
+  _K8S_NAMESPACE_: ''
+  _GATEWAY_PATH_: ''
+  _GATEWAY_MANIFEST_: '${_K8S_NAMESPACE_}-gateway.yaml'
+  _LOG_BUCKET_: ''
+options:
+    dynamicSubstitutions: true
