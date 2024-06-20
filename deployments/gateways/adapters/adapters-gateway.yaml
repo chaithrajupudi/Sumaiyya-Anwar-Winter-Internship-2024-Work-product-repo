@@ -1,0 +1,52 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: adapters-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"  
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: sms-virtual-service
+spec:
+  hosts:
+  - ""
+  gateways:
+  - adapters-gateway
+  http:  
+  - match:
+    - uri:
+        regex: /?(.*)
+    route:
+    - destination:
+        host: smsapp-svc
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: email-virtual-service
+spec:
+  hosts:
+  - ""
+  gateways:
+  - adapters-gateway
+  http:  
+  - match:
+    - uri:
+        regex: /?(.*)
+    route:
+    - destination:
+        host: emailapp-svc
+        port:
+          number: 80  

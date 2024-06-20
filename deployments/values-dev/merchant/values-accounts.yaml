@@ -1,0 +1,68 @@
+deployment:
+  name: accountsapp-deploy
+  serviceAccount: merchant-sa
+  labels:
+    app: accountsapp-deploy 
+    version: v1
+  selectorLabels:
+    app: accountsapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool    
+  containers:
+  - name: accounts-app
+    image: "account-image"
+    imagePullPolicy: Always
+    memoryRequest: "500Mi"
+    cpuRequest: "250m"
+    memoryLimit: "1Gi"
+    cpuLimit: "500m"
+    containerPorts: [8075]
+    envVarsFrom:
+    - configMapRef:
+        name: accountsapp-cm
+    - secretRef:
+        name: accountsapp-secrets
+service:
+  name: accountsapp-svc
+  selector:
+    app: accountsapp-pod
+  type: ClusterIP
+  ports: 
+  - protocol: TCP
+    name: http
+    port: 80
+    targetPort: 8075
+configmap:
+  name: accountsapp-cm
+  data:
+    server.port: "8075"
+    spring.application.name: account
+    spring.application.version: "0.0.1"
+    spring.profiles.active: dev
+    spring.server.base.url: 
+    sms.service.base.url: 
+    email.service.base.url: 
+    spring.read.datasource.driver-class-name: com.mysql.cj.jdbc.Driver
+    spring.write.datasource.driver-class-name: com.mysql.cj.jdbc.Driver
+    spring.liquibase.driver-class-name: com.mysql.cj.jdbc.Driver
+    spring.liquibase.change-log: classpath:classpath:/changelog/changelog.xml
+    spring.liquibase.enabled: "true"
+    management.endpoint.liquibase.enabled: "false"
+    spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+    spring.jpa.properties.hibernate.show_sql: "true"
+    spring.jpa.properties.hibernate.jdbc.batch_size: "20"
+    spring.jpa.properties.hibernate.order_inserts: "true"
+    spring.jpa.properties.hibernate.order_updates: "true"
+    spring.jpa.properties.hibernate.batch_versioned_data: "true"
+    jwt.access.token.expiration.time: ""
+    spring.cache.type: redis
+    spring.data.redis.host: ""
+    spring.data.redis.port: ""
+    spring.cache.redis.time-to-live: ""
+    
+    

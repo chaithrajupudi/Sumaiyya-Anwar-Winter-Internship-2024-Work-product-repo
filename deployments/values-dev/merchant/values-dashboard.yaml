@@ -1,0 +1,53 @@
+deployment:
+  name: dashboardapp-deploy
+  serviceAccount: merchant-sa
+  labels:
+    app: dashboardapp-deploy 
+    version: v1
+  selectorLabels:
+    app: dashboardapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool    
+  containers:
+  - name: dashboard-app
+    image: "merchant-dashboard-image"
+    imagePullPolicy: Always
+    memoryRequest: "250Mi"
+    cpuRequest: "100m"
+    memoryLimit: "500Mi"
+    cpuLimit: "200m"
+    containerPorts: [3000]
+    envVarsFrom:
+    - configMapRef:
+        name: dashboardapp-cm
+    - secretRef:
+        name: dashboardapp-secrets    
+service:
+  name: dashboardapp-svc
+  selector:
+    app: dashboardapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 80
+    targetPort: 3000
+configmap:
+  name: dashboardapp-cm
+  data:
+    NODE_ENV: development
+    NEXT_PUBLIC_AUTH_API_BASE_URL:
+    NEXT_PUBLIC_CUSTOMER_API_BASE_URL: 
+    NEXT_PUBLIC_INVENTORY_API_BASE_URL: 
+    NEXT_PUBLIC_BUSINESS_API_BASE_URL: 
+    NEXT_PUBLIC_BILLING_API_BASE_URL: 
+    NEXT_PUBLIC_REPORTS_API_BASE_URL: 
+    NEXT_PUBLIC_CATALOG_API_BASE_URL: 
+    BYPASS_LOGIN: "true"
+    
+    

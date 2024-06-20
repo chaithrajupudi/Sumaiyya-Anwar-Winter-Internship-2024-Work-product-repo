@@ -1,0 +1,52 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: merchant-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"  
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: dashboard-virtual-service
+spec:
+  hosts:
+  - ""  
+  gateways:
+  - merchant-gateway
+  http:
+  - match:
+    - uri:
+        regex: /?(.*)
+    route:
+    - destination:
+        host: dashboardapp-svc
+        port:
+          number: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: accounts-virtual-service
+spec:
+  hosts:
+  - ""  
+  gateways:
+  - merchant-gateway
+  http:
+  - match:
+    - uri:
+        regex: /?(.*)
+    route:
+    - destination:
+        host: accountsapp-svc
+        port:
+          number: 80  

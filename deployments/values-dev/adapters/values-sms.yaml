@@ -1,0 +1,58 @@
+deployment:
+  name: smsapp-deploy
+  serviceAccount: adapters-sa
+  labels:
+    app: smsapp-deploy 
+    version: v1
+  selectorLabels:
+    app: smsapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool    
+  containers:
+  - name: sms-app
+    image: "sms-image"
+    imagePullPolicy: Always
+    memoryRequest: "250Mi"
+    cpuRequest: "100m"
+    memoryLimit: "500Mi"
+    cpuLimit: "200m"
+    containerPorts: [8088]
+    envVarsFrom:
+    - configMapRef:
+        name: smsapp-cm
+    - secretRef:
+        name: smsapp-secrets
+service:
+  name: smsapp-svc
+  selector:
+    app: smsapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 80
+    targetPort: 8088
+configmap:
+  name: smsapp-cm
+  data:
+    spring.application.name: sms
+    spring.application.version: "0.0.1"
+    spring.profiles.active: staging
+    server.port: "8088"
+    spring.server.base.url: 
+    gupshup.api.url.template: 
+    gupshup.api.sendotp.url.template: 
+    gupshup.api.verifyotp.url.template: 
+    gupshup.otp.sms.template: 
+    spring.cache.type: redis
+    spring.data.redis.host: ""
+    spring.data.redis.port: ""
+    spring.cache.redis.time-to-live: ""
+
+    
+    

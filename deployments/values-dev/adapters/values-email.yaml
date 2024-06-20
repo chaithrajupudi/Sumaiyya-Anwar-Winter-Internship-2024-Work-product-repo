@@ -1,0 +1,54 @@
+deployment:
+  name: emailapp-deploy
+  serviceAccount: adapters-sa
+  labels:
+    app: emailapp-deploy 
+    version: v1
+  selectorLabels:
+    app: emailapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool    
+  containers:
+  - name: email-app
+    image: "email-image"
+    imagePullPolicy: Always
+    memoryRequest: "250Mi"
+    cpuRequest: "100m"
+    memoryLimit: "500Mi"
+    cpuLimit: "200m"
+    containerPorts: [8093]
+    envVarsFrom:
+    - configMapRef:
+        name: emailapp-cm
+    - secretRef:
+        name: emailapp-secrets
+service:
+  name: emailapp-svc
+  selector:
+    app: emailapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 80
+    targetPort: 8093
+configmap:
+  name: emailapp-cm
+  data:
+    server.port: "8093"
+    spring.application.name: subscriptions
+    spring.application.version: "0.0.1"
+    spring.profiles.active: prod
+    spring.server.base.url:   
+    spring.cache.type: redis
+    spring.data.redis.host: ""
+    spring.data.redis.port: ""
+    spring.cache.redis.time-to-live: ""    
+    spring.sendgrid.sender.email: 
+    
+    
