@@ -1,0 +1,51 @@
+deployment:
+  name: claimmsapp-deploy
+  serviceAccount: registry-sa
+  labels:
+    app: claimmsapp-deploy 
+    version: v1
+  selectorLabels:
+    app: claimmsapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: claimms-app
+    image: 
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "1Gi"
+    cpuRequest: "250m"
+    memoryLimit: "2Gi"
+    cpuLimit: "500m"
+    containerPorts: [8082]
+    livenessProbe:
+      commands:
+      - wget
+      - -t1
+      - --spider
+      - http://localhost:8082/health
+      parameters:
+        periodSeconds: 30
+        timeoutSeconds: 10
+        failureThreshold: 10
+    envVarsFrom:
+    - secretRef:
+        name: claim-ms-secrets
+    envVars:    
+    - name: 
+      value: 
+service:
+  name: claimmsapp-svc
+  selector:
+    app: claimmsapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 8082
+    targetPort: 8082  
+    

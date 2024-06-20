@@ -1,0 +1,6 @@
+apiVersion: v2
+name: registry-ingress-chart
+description: A Helm chart for Ingress controller of Sunbird RC Registry
+type: application
+version: 0.0.1
+appVersion: "1.0.0"

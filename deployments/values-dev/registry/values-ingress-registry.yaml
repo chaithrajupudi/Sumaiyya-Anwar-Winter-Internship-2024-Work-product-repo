@@ -1,0 +1,12 @@
+ingress:
+  name: ingress-resource-registry
+  annotations:    
+    nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+  ingressClassName: "nginx"
+  rules:
+  - host: "" 
+    paths:
+    - pathType: ImplementationSpecific
+      path: /registry(/|$)(.*)
+      serviceName: registryapp-svc 
+      servicePort: 8081

@@ -1,0 +1,11 @@
+{{ if .Values.cms }}
+{{ range $cm := .Values.cms }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $cm.name }}
+data:
+{{ toYaml $cm.data | nindent 2 }}
+{{ end }}
+{{ end }}

@@ -1,0 +1,41 @@
+deployment:
+  name: clickhouseapp-deploy   
+  labels:
+    app: clickhouseapp-deploy 
+    version: v1
+  selectorLabels:
+    app: clickhouseapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool    
+  containers:
+  - name: clickhouse-app
+    image: 
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "500Mi"
+    cpuRequest: "250m"
+    memoryLimit: "1000Mi"
+    cpuLimit: "500m"
+    containerPorts: [9000]
+    livenessProbe:
+      commands:
+      - wget
+      - --no-verbose
+      - --tries=1
+      - --spider
+      - http://localhost:8123/ping
+service:
+  name: clickhouseapp-svc
+  selector:
+    app: clickhouseapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 9002
+    targetPort: 9000
+    

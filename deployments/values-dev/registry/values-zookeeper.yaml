@@ -1,0 +1,38 @@
+deployment:
+  name: zookeeperapp-deploy   
+  labels:
+    app: zookeeperapp-deploy 
+    version: v1
+  selectorLabels:
+    app: zookeeperapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: zookeeper-app
+    image: 
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "250Mi"
+    cpuRequest: "100m"
+    memoryLimit: "500Mi"
+    cpuLimit: "200m"
+    containerPorts: [2181]    
+    envVars:
+    - name: ZOOKEEPER_CLIENT_PORT
+      value: 2181
+    - name: ZOOKEEPER_TICK_TIME
+      value: 2000
+service:
+  name: zookeeperapp-svc
+  selector:
+    app: zookeeperapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 2181
+    targetPort: 2181

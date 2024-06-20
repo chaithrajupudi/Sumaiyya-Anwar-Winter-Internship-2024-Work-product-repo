@@ -1,0 +1,57 @@
+deployment:
+  name: elasticapp-deploy
+  serviceAccount: registry-sa
+  labels:
+    app: elasticapp-deploy 
+    version: v1
+  selectorLabels:
+    app: elasticapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: elastic-app
+    image: 
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "1Gi"
+    cpuRequest: "250m"
+    memoryLimit: "2Gi"
+    cpuLimit: "500m"
+    containerPorts: [9200, 9300]
+    livenessProbe:
+      commands:
+      - curl
+      - -f
+      - localhost:9200/_cluster/health
+      parameters:
+        periodSeconds: 30
+        timeoutSeconds: 10
+        failureThreshold: 4
+    envVars:
+    - name: discovery.type
+      value: single-node
+    - name: ES_JAVA_OPTS
+      value: -Xms512m -Xmx512m
+    - name: ELASTIC_PASSWORD
+      value: 
+    - name: xpack.security.enabled
+      value: false
+service:
+  name: elasticapp-svc
+  selector:
+    app: elasticapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 9200
+    targetPort: 9200
+  - protocol: TCP
+    name: http2
+    port: 9300
+    targetPort: 9300
+    

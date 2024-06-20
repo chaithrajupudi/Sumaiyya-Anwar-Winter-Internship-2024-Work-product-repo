@@ -1,0 +1,44 @@
+deployment:
+  name: metricsapp-deploy   
+  labels:
+    app: metricsapp-deploy 
+    version: v1
+  selectorLabels:
+    app: metricsapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: metrics-app
+    image: ghcr.io/sunbird-rc/sunbird-rc-metrics
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "250Mi"
+    cpuRequest: "100m"
+    memoryLimit: "500Mi"
+    cpuLimit: "200m"
+    containerPorts: [8070]
+    envVars:    
+    - name: CLICK_HOUSE_URL
+      value: 
+    - name: CLICKHOUSE_DATABASE
+      value: default
+    - name: KAFKA_BOOTSTRAP_SERVERS
+      value:
+    - name: KAFKA_METRICS_TOPIC
+      value: 
+    - name: REDIS_URL
+      value: 
+service:
+  name: metricsapp-svc
+  selector:
+    app: metricsapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 8070
+    targetPort: 8070

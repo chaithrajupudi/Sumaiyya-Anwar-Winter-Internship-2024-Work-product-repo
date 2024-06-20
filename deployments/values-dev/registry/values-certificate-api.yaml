@@ -1,0 +1,50 @@
+deployment:
+  name: certificateapiapp-deploy   
+  labels:
+    app: certificateapiapp-deploy 
+    version: v1
+  selectorLabels:
+    app: certificateapiapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool    
+  containers:
+  - name: certificateapi-app
+    image: 
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "250Mi"
+    cpuRequest: "100m"
+    memoryLimit: "500Mi"
+    cpuLimit: "200m"
+    containerPorts: [8087]
+    envVarsFrom:
+    - secretRef:
+        name: certificate-api-secrets
+    envVars:    
+    - name: PORT
+      value: 8087
+    volumeMounts:
+    - mountPath: /go/config/
+      name: certificateapi-config
+  volumes:
+  - name: certificateapi-config
+    configMap:
+      name: certificateapi-cm
+service:
+  name: certificateapiapp-svc
+  selector:
+    app: certificateapiapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 8087
+    targetPort: 8087
+cms:
+- name: certificateapi-cm
+  data:
+    

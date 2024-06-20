@@ -1,0 +1,133 @@
+deployment:
+  name: registryapp-deploy   
+  labels:
+    app: registryapp-deploy 
+    version: v1
+  selectorLabels:
+    app: registryapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: registry-app
+    image: 
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "1Gi"
+    cpuRequest: "1"
+    memoryLimit: "2Gi"
+    cpuLimit: "1.5"
+    containerPorts: [8081]
+    livenessProbe:
+      commands:
+      - wget
+      - -nv
+      - -t1
+      - --spider
+      - http://localhost:8081/health
+      parameters:
+        periodSeconds: 30
+        timeoutSeconds: 10
+        failureThreshold: 10
+    envVarsFrom:
+    - secretRef:
+        name: registry-secrets
+    - configMapRef:
+        name: registry-cm
+    volumeMounts:
+    - mountPath: 
+      name: registry-schemas-config
+    - mountPath:
+      name: registry-views-config      
+  volumes:
+  - name: registry-schemas-config
+    configMap:
+      name: registry-schemas-cm
+  - name: registry-views-config
+    configMap:
+      name: registry-views-cm
+service:
+  name: registryapp-svc
+  selector:
+    app: registryapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 8081
+    targetPort: 8081
+cms:
+- name: registry-views-cm
+  data:
+    Employee_SearchResult.json: |
+      {
+        All Data here
+      }
+- name: registry-cm
+  data:
+    encryption_enabled: "false"
+    encryption_health_check_url: "http://es.svc:8013/health"
+    encryption_uri: "http://es:8013/crypto/v1/_encrypt"
+    encryption_batch_uri: "http://es:8013/crypto/v1/_encrypt"
+    event_enabled: "false"
+    event_topic: "events"
+    event_providerName: "
+    elastic_search_connection_url: "es:9200"
+    elastic_search_scheme: "http"
+    elastic_search_auth_enabled: "false"
+    search_providerName: 
+    sunbird_sso_realm: "sunbird-rc"
+    sunbird_sso_url: "http://keycloak:8080/auth"
+    OAUTH2_RESOURCES_0_URI: "http://keycloak:8080/auth/realms/sunbird-rc"
+    OAUTH2_RESOURCES_0_PROPERTIES_ROLES_PATH: "realm_access.roles"
+    identity_provider: 
+    idgen_enabled: "false"
+    idgen_health_check_url: "http://idgenservice:8088/egov-idgen/health"
+    idgen_generate_url: "http://idgenservice/egov-idgen/id/_generate"
+    idgen_id_format_url: "http://idgenservice:8088/egov-idgen/id/_format/add"
+    claims_enabled: "false"
+    claims_url: "http://claimms:8082"
+    did_enabled: "false"
+    did_health_check_url: "http://identity:3332/health"
+    did_generate_url: "http://identity:3332/did/generate"
+    did_resolve_url: "http://identity:3332/did/resolve/{id}"
+    signature_enabled: "false" 
+    signature_provider: 
+    signature_v2_health_check_url: "http://credential:3000/health"
+    signature_v2_issue_url: "http://credential:3000/credentials/issue"
+    signature_v2_get_url: "http://credential:3000/credentials/{id}"
+    signature_v2_delete_url: "http://credential:3000/credentials/{id}"
+    signature_v2_verify_url: "http://credential:3000/credentials/{id}/verify"
+    signature_v2_revocation_list_url: "http://credential:3000/credentials/revocation-list?issuerId: {issuerDid}&page: {page}&limit: {limit}"
+    signature_v2_schema_health_check_url: "http://credentialschema:3333/health"
+    signature_v2_schema_create_url: "http://credentialschema:3333/credential-schema"
+    signature_v2_schema_update_url: "http://credentialschema:3333/credential-schema/{id}/{version}"
+    signature_v2_schema_get_by_id_and_version_url: "http://credentialschemac:3333/credential-schema/{id}/{version}"
+    signature_v2_schema_search_by_tags_url: "http://credentialschema:3333/credential-schema?tags={tags}"
+    sign_url: "http://certificate-signer:8079/sign"
+    verify_url: "http://certificate-signer:8079/verify"
+    sign_health_check_url: "http://certificate-signer:8079/health"
+    certificate_enabled: "false"
+    pdf_url: "http://certificateapi:8087/api/v1/certificatePDF"
+    certificate_health_check_url: "http://certificateapi:8087/health" 
+    template_base_url: "http://registry:8081/api/v1/templates/"
+    sunbird_keycloak_user_set_password: "true"
+    registry_base_apis_enable: "false"
+    logging.level.root: "INFO"
+    enable_external_templates: "true"
+    async_enabled: "false"
+    authentication_enabled: "false"  
+    kafka_bootstrap_address: "kafkac:9092"
+    webhook_enabled: "false"
+    webhook_url: "http://localhost:5001/api/v1/callback"
+    redis_host: "10.17.210.27"
+    redis_port: "6379"
+    manager_type: "DefinitionsManager"
+    expand_reference: "false"
+    swagger_title: "Sunbird Registry and Credential"
+    notification_async_enabled: "false"
+    notification_enabled: "false"
+    notification_url: "http://notificationms:8765/notification-service/v1/notification"

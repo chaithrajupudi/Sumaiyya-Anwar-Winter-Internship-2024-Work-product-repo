@@ -1,0 +1,47 @@
+deployment:
+  name: encryptionserviceapp-deploy   
+  labels:
+    app: encryptionserviceapp-deploy 
+    version: v1
+  selectorLabels:
+    app: encryptionserviceapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: encryptionservice-app
+    image: 
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "500Mi"
+    cpuRequest: "100m"
+    memoryLimit: "1000Mi"
+    cpuLimit: "200m"
+    containerPorts: [8013]
+    envVarsFrom:
+    - secretRef:
+        name: encryption-service-secrets
+    envVars:
+    - name: server.port
+      value: 8013
+    - name: server.servlet.context-path
+      value: /    
+    - name: egov.mdms.provider
+      value: org.egov.enc.masterdata.provider.DBMasterDataProvider
+    - name: spring.flyway.baseline-on-migrate
+      value: true
+    - name: management.endpoints.web.base-path
+      value: /
+service:
+  name: encryptionserviceapp-svc
+  selector:
+    app: encryptionserviceapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 8013
+    targetPort: 8013

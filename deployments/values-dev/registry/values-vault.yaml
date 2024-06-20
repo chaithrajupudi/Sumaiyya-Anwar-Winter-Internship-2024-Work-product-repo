@@ -1,0 +1,83 @@
+deployment:
+  name: vaultapp-deploy   
+  labels:
+    app: vaultapp-deploy 
+    version: v1
+  selectorLabels:
+    app: vaultapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: vault-app
+    image: vault:1.13.3
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "250Mi"
+    cpuRequest: "250m"
+    memoryLimit: "500Mi"
+    cpuLimit: "500m"
+    containerPorts: [8200]
+    command: ["vault", "server", "-config=/vault/config/vault.json"]
+    livenessProbe:
+      commands:
+      - wget      
+      - --spider
+      - http://localhost:8200/v1/sys/health
+      parameters:
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+    volumeMounts:
+    - mountPath: /vault/config/vault.json
+      name: vault-config    
+    envVars:
+    - name: VAULT_ADDR
+      value: 
+    - name: VAULT_API_ADDR
+      value: 
+    - name: VAULT_ADDRESS
+      value:
+    securityContext:
+      capabilities:
+        add:        
+        - IPC_LOCK
+  volumes:
+  - name: vault-config
+    configMap:
+      name: valut-cm
+service:
+  name: vaultapp-svc
+  selector:
+    app: vaultapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 8200
+    targetPort: 8200
+cms:
+- name: valut-cm
+  data:
+    vault.json: |
+      {
+        "listener": {
+          "tcp": {
+            "address": "0.0.0.0:8200",
+            "tls_disable": 1
+          }
+        },
+        "backend": {
+          "file": {
+            "path": "/vault/file"
+          }
+        },
+        "default_lease_ttl": "168h",
+        "max_lease_ttl": "0h",
+        "api_addr": "http://0.0.0.0:8200",
+        "ui": "true",
+        "disable_mlock": "true"
+      }

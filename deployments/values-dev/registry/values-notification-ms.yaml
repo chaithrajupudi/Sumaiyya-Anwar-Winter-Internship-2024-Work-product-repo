@@ -1,0 +1,49 @@
+deployment:
+  name: notificationmsapp-deploy   
+  labels:
+    app: notificationmsapp-deploy 
+    version: v1
+  selectorLabels:
+    app: notificationmsapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: notificationms-app
+    image: 
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "250Mi"
+    cpuRequest: "100m"
+    memoryLimit: "500Mi"
+    cpuLimit: "200m"
+    containerPorts: [8765]
+    livenessProbe:
+      commands:
+      - wget
+      # - nv
+      - -t1
+      - --spider
+      - http://localhost:8765/notification-service/v1/health
+      parameters:
+        periodSeconds: 30
+        timeoutSeconds: 10
+        failureThreshold: 10
+    envVars:    
+    - name: TRACK_NOTIFICATIONS
+      value: false
+    - name: KAFKA_BOOTSTRAP_SERVERS
+      value: 
+service:
+  name: notificationmsapp-svc
+  selector:
+    app: notificationmsapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 8765
+    targetPort: 8765

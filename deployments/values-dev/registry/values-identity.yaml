@@ -1,0 +1,68 @@
+deployment:
+  name: identityapp-deploy   
+  labels:
+    app: identityapp-deploy 
+    version: v1
+  selectorLabels:
+    app: identityapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: identity-app
+    image:
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "250Mi"
+    cpuRequest: "250m"
+    memoryLimit: "500Mi"
+    cpuLimit: "500m"
+    containerPorts: [3332]
+    livenessProbe:
+      commands:
+      - curl      
+      - -f
+      - http://localhost:3332/health
+      parameters:
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 5
+    envVarsFrom:
+    - secretRef:
+        name: identity-secrets
+    envVars:    
+    - name: VAULT_ADDR
+      value: 
+    - name: VAULT_BASE_URL
+      value: 
+    - name: VAULT_ROOT_PATH
+      value: 
+    - name: VAULT_TIMEOUT
+      value: 
+    - name: VAULT_PROXY
+      value: 
+    - name: SIGNING_ALGORITHM
+      value: 
+    - name: JWKS_URI
+      value: ""
+    - name: ENABLE_AUTH
+      value: f
+    - name: WEB_DID_BASE_URL
+      value: 
+    securityContext:
+      capabilities:
+        add:        
+        - IPC_LOCK
+service:
+  name: identityapp-svc
+  selector:
+    app: identityapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 3332
+    targetPort: 3332

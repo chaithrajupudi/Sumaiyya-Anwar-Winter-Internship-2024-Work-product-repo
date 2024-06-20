@@ -1,0 +1,71 @@
+deployment:
+  name: keycloakapp-deploy   
+  labels:
+    app: keycloakapp-deploy 
+    version: v1
+  selectorLabels:
+    app: keycloakapp-pod
+    version: v1
+  replicas: 1
+  strategyType: RollingUpdate
+  maxSurge: 1
+  maxUnavailable: 0
+  nodeSelector:
+    cloud.google.com/gke-nodepool: worker-pool
+  containers:
+  - name: keycloak-app
+    image: 
+    imagePullPolicy: IfNotPresent
+    memoryRequest: "1Gi"
+    cpuRequest: "200m"
+    memoryLimit: "2Gi"
+    cpuLimit: "500m"
+    containerPorts: [8080, 9990]
+    livenessProbe:
+      commands:
+      - curl
+      - -f
+      - localhost:9990/health/ready
+      parameters:
+        initialDelaySeconds: 30
+        periodSeconds: 30
+        timeoutSeconds: 10
+        failureThreshold: 10
+    volumeMounts:
+    - mountPath: /opt/jboss/keycloak/imports
+      name: keycloak-imports
+    envVarsFrom:
+    - secretRef:
+        name: keycloak-secrets
+    envVars:
+    - name: KEYCLOAK_LOGO
+      value: 
+    - name: KEYCLOAK_IMPORT
+      value: 
+    - name: PROXY_ADDRESS_FORWARDING
+      value: 
+  volumes:
+  - name: keycloak-imports
+    configMap:
+      name: keycloak-cm
+service:
+  name: keycloakapp-svc
+  selector:
+    app: keycloakapp-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    name: http
+    port: 8080
+    targetPort: 8080
+  - protocol: TCP
+    name: http2
+    port: 9990
+    targetPort: 9990
+cms:
+- name: keycloak-cm
+  data:
+    realm-export.json: |
+      {
+        All data in JSON
+      }
